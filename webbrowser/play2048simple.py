@@ -1,4 +1,4 @@
-#! python 3
+#! python3
 #
 # 随机暴力play game 2048
 #

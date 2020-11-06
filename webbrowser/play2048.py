@@ -1,4 +1,4 @@
-#! python 3
+#! python3
 #
 # AI play game 2048
 #
