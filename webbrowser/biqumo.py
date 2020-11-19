@@ -7,6 +7,7 @@
 # 笔趣阁小说抓取
 #
 
+import re
 import requests
 from bs4 import BeautifulSoup
 
@@ -17,6 +18,45 @@ headers = {
     'User-Agent': 'Mozilla/5.0 (Linux; Android 5.0; SM-G900P Build/LRX21T) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Mobile Safari/537.36'}
 textFile = open('Free soldier king.txt', 'w')
 chapters = []  # 章节列表
+ignoreLink = ['/bookcase.html', '/', '#top']
+bookRegex = re.compile(r'(/\d+/\d+)(/|.html)')
+level = 10
+books = {}  # 小说列表
+
+
+def addBook(book_link, book_name):
+    if book_link in books:
+        return None
+    books[book_link] = book_name
+
+
+def findBooks(url, lv):
+    """
+    寻找小说
+
+    :param url:链接
+    :param lv:查找深度
+    :return:
+    """
+
+    res = requests.get(url, headers=headers)
+    if res.status_code != requests.codes.ok:
+        return None
+    res.encoding = res.apparent_encoding
+    beautifulSoup = BeautifulSoup(res.text, 'html.parser')
+    bookElems = beautifulSoup.select('a')
+    for elem in bookElems:
+        newLink = elem.get('href')
+        name = elem.getText()
+        if newLink in ignoreLink:
+            continue
+        if name == '':
+            continue
+        mo = bookRegex.search(newLink)
+        if mo:
+            addBook(mo.group(1) + '/', name)
+        elif lv < level:
+            findBooks(base_link + newLink, lv + 1)
 
 
 def getChapters():
