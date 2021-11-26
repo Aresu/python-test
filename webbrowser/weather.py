@@ -29,7 +29,7 @@ PROVINCES = ['AAH', 'AAM', 'ABJ', 'ACQ', 'AFJ', 'AGD', 'AGS', 'AGX', 'AGZ',
              'ATJ', 'ATW', 'AXG', 'AXJ', 'AXZ', 'AYN', 'AZJ']
 
 
-def getProvinceCode(province):
+def get_province_code(province):
     """
     获取 省|直辖市|特别行政区 编码
     规则：A + 前两个字拼音的首字符大写
@@ -50,7 +50,7 @@ def getProvinceCode(province):
     return code
 
 
-def getSuitability(src_name, dst_name):
+def get_suitability(src_name, dst_name):
     """
     计算源区域名字与目标区域名字的匹配度，从第一个字开始匹配，粗略计算
 
@@ -70,7 +70,7 @@ def getSuitability(src_name, dst_name):
     return count
 
 
-def getAreaCode(code, area):
+def get_area_code(code, area):
     """
     根据 省|直辖市|特别行政区 编码获取地区编码
 
@@ -85,10 +85,10 @@ def getAreaCode(code, area):
     r = requests.get(link, headers=headers)
     r.raise_for_status()
     # 获取 json 的 string
-    jsonStr = r.text
-    jsonData = json.loads(jsonStr)
+    json_str = r.text
+    json_data = json.loads(json_str)
     cities = {}
-    for cityInfo in jsonData['data'].split('|'):
+    for cityInfo in json_data['data'].split('|'):
         lst = cityInfo.split(',')
         if len(lst) == 2:
             cities[lst[1]] = lst[0]
@@ -96,7 +96,7 @@ def getAreaCode(code, area):
     suitability = 0  # 匹配数量
     real_name = ""
     for name in cities.keys():
-        count = getSuitability(area, name)
+        count = get_suitability(area, name)
         if count > suitability:
             suitability = count
             real_name = name
@@ -107,7 +107,7 @@ def getAreaCode(code, area):
     return cities[real_name]
 
 
-def getWeather(code):
+def get_weather(code):
     """
     根据地区编码获取天气信息
 
@@ -128,7 +128,7 @@ def getWeather(code):
     print(str(comment_dict['windDirection']) + str(comment_dict['windScale']))
 
 
-def getFutureInfo(code):
+def get_future_info(code):
     """
     根据地区编码获取未来天气信息
 
@@ -139,20 +139,20 @@ def getFutureInfo(code):
                        + '.html')
     res.encoding = res.apparent_encoding
     res.raise_for_status()
-    beautifulSoup = BeautifulSoup(res.text, 'html.parser')
-    hourTableElems = beautifulSoup.select('#hourTable_0')
-    rowElems = hourTableElems[0].select('tr')
+    beautiful_soup = BeautifulSoup(res.text, 'html.parser')
+    hour_table_elements = beautiful_soup.select('#hourTable_0')
+    row_elements = hour_table_elements[0].select('tr')
     print()
     print('未来天气情况')
     rows = []
-    for rowElem in rowElems:
-        gridElems = rowElem.select('td')
-        if gridElems[0].getText().strip() != '天气':
-            for idx in range(len(gridElems)):
-                gridElem = gridElems[idx]
+    for row_element in row_elements:
+        grid_elements = row_element.select('td')
+        if grid_elements[0].getText().strip() != '天气':
+            for idx in range(len(grid_elements)):
+                grid_element = grid_elements[idx]
                 if len(rows) < idx + 1:
                     rows.append([])
-                rows[idx].append(gridElem.getText().strip())
+                rows[idx].append(grid_element.getText().strip())
     pb = prettytable.PrettyTable()
     for idx in range(len(rows)):
         if idx == 0:
@@ -162,7 +162,7 @@ def getFutureInfo(code):
     print(pb)
 
 
-def getAverageInfo(code):
+def get_average_info(code):
     """
     根据地区编码获取年月平均气温和降水信息
 
@@ -174,11 +174,11 @@ def getAverageInfo(code):
     # 获取 json 的 string
     json_string = res.text
     json_data = json.loads(json_string)
-    beginYear = json_data['data']['beginYear']
-    endYear = json_data['data']['endYear']
+    begin_year = json_data['data']['beginYear']
+    end_year = json_data['data']['endYear']
     comment_list = json_data['data']['data']
     print()
-    print("{}年-{}年月平均气温和降水".format(beginYear, endYear))
+    print("{}年-{}年月平均气温和降水".format(begin_year, end_year))
     pb = prettytable.PrettyTable()
     pb.field_names = ['月份', '最低温度', '最高温度', '雨量']
 
@@ -194,7 +194,7 @@ def getAverageInfo(code):
     print(pb)
 
 
-def errorNotice():
+def error_notice():
     """
     参数错误提示
     """
@@ -203,19 +203,19 @@ def errorNotice():
 
 
 if len(sys.argv) >= 3:
-    province_code = getProvinceCode(sys.argv[1])
-    area_code = getAreaCode(province_code, sys.argv[2])
-    getWeather(area_code)
+    province_code = get_province_code(sys.argv[1])
+    area_code = get_area_code(province_code, sys.argv[2])
+    get_weather(area_code)
     if len(sys.argv) >= 4:
         command = sys.argv[3].lower()
         if command == 'future':
-            getFutureInfo(area_code)
+            get_future_info(area_code)
         elif command == 'history':
-            getAverageInfo(area_code)
+            get_average_info(area_code)
         elif command == 'all':
-            getFutureInfo(area_code)
-            getAverageInfo(area_code)
+            get_future_info(area_code)
+            get_average_info(area_code)
         else:
-            errorNotice()
+            error_notice()
 else:
-    errorNotice()
+    error_notice()
